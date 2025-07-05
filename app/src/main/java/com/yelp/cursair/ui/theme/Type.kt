@@ -36,3 +36,5 @@ object AppType {
         fontSize = 18.sp
     )
 }
+
+
