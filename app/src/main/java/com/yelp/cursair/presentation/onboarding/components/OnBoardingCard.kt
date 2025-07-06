@@ -1,58 +1,69 @@
-package com.yelp.cursair.presentation.onboarding
+package com.yelp.cursair.presentation.onboarding.components
 
-import androidx.compose.foundation.Image
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.yelp.cursair.R
-import com.yelp.cursair.ui.theme.CursairTheme
+import com.yelp.cursair.presentation.onboarding.CardData
+import com.yelp.cursair.presentation.onboarding.cards
 
 
 @Composable
-fun WelcomeCard() {
+fun OnBoardingCardHost(pagerState: PagerState, content: @Composable () -> Unit) {
+
+        val targetProgress = cards[pagerState.currentPage].progress
+        val animatedProgress by animateFloatAsState(
+            targetValue = targetProgress,
+            animationSpec = tween(durationMillis = 400),
+            label = "ProgressAnimation"
+        )
+
+
         val surfaceColor = MaterialTheme.colorScheme.surface
         val outlineColor = if(isSystemInDarkTheme()){
             MaterialTheme.colorScheme.surfaceBright
         }else{
             MaterialTheme.colorScheme.surfaceDim
         }
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             modifier = Modifier
                 .width(340.dp)
+                .height(340.dp)
                 .drawWithCache {
                     val cornerRadius = 16.dp.toPx()
                     val cutoutRadius = 25.dp.toPx()
-
                     val path = Path().apply {
                         reset()
                         moveTo(cornerRadius, 0f)
@@ -118,114 +129,85 @@ fun WelcomeCard() {
                     }
                 }
         ) {
-            CardContent()
+            content()
         }
-
-}
-
-
-
-@Composable
-fun WelcomeScreen() {
-    CursairTheme {
-        Scaffold(
-            containerColor = MaterialTheme.colorScheme.background,
-        ) { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                CursairLogo()
-                Spacer(modifier = Modifier.height(48.dp))
-                WelcomeCard()
-            }
-        }
+        Spacer(modifier = Modifier.height(20.dp))
+        LinearProgressIndicator(
+            progress = { animatedProgress },
+            modifier = Modifier
+                .width(339.dp)
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp)),
+            color = MaterialTheme.colorScheme.onSurface,
+            trackColor = MaterialTheme.colorScheme.inverseOnSurface,
+        )
     }
+
 }
 
-@Composable
-fun CursairLogo() {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Image(
-                painter = painterResource(R.drawable.logo),
-                contentDescription = null,
-                modifier = Modifier.size(36.dp)
-            )
-            Text(
-                text = "Cursair",
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-        }
-}
+
+
+
 
 @Composable
-fun CardContent() {
-        Column(
-            modifier = Modifier.padding(horizontal = 32.dp, vertical = 40.dp),
+fun OnBoardingPageContent(cardData: CardData, onButtonClick: () -> Unit) {
+
+    Column(
+            modifier = Modifier.padding(horizontal = 32.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(20.dp))
             Text(
                 text = "ADMIT ONE",
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold,
                 fontSize = 12.sp,
                 letterSpacing = 2.sp
+
             )
             Spacer(modifier = Modifier.height(20.dp))
             Text(
-                text = "Welcome to Cursair",
+                text = cardData.title,
                 style = MaterialTheme.typography.headlineMedium,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "Your new mouse.\nLet's get you set up.",
+                text = cardData.description,
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.secondary,
                 lineHeight = 24.sp
             )
-            Spacer(modifier = Modifier.height(28.dp))
-            Button(
-                onClick = { /* Handle Get Started click */ },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onSurface)
-            ) {
-                Text(
-                    text = "Get Started",
-                    color = MaterialTheme.colorScheme.surface,
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-            Spacer(modifier = Modifier.height(20.dp))
-            LinearProgressIndicator(
-                progress = { 0.3f },
+//            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.weight(1f))
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(8.dp),
-                color = MaterialTheme.colorScheme.onSurface,
-                trackColor = MaterialTheme.colorScheme.inverseOnSurface,
-            )
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable(
+                        onClick = onButtonClick,
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(color = MaterialTheme.colorScheme.primary)
+                    ),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.onSurface
+            ) {
+                Box(
+                    modifier = Modifier.padding(vertical = 14.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = cardData.buttonText,
+                        color = MaterialTheme.colorScheme.surface,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
         }
 }
 
 
-@PreviewLightDark
-@Composable
-fun WelcomeScreenPreview() {
-    CursairTheme {
-        WelcomeScreen()
-    }
-}
+
