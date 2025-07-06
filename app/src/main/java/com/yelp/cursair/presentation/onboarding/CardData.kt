@@ -22,9 +22,23 @@ val cards = listOf<CardData>(
         progress = 0.6f,
     ),
     CardData(
-        title = "Devices connected.",
-        description = "Place the phone on a flat surface.\nEnjoy your new mouse.",
-        buttonText = "Start",
+        title = "",
+        description = "",
+        buttonText = "",
         progress = 1.0f,
     ),
+)
+
+val successCard = CardData(
+    title = "Device connected.",
+    description = "Place the phone on a flat surface.\nEnjoy your new mouse.",
+    buttonText = "Start",
+    progress = 1.0f
+)
+
+val failureCard = CardData(
+    title = "Connection failed.",
+    description = "Please ensure your laptop is on the same network and try again.",
+    buttonText = "Try Again",
+    progress = 0.6f
 )
