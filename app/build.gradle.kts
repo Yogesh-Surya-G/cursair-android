@@ -57,6 +57,19 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    //splash screen
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.material3)
+
+
+    implementation(libs.accompanist.permissions)
+
+// CameraX dependencies
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+
+// ML Kit for Barcode (QR Code) Scanning
+    implementation(libs.barcode.scanning)
 }

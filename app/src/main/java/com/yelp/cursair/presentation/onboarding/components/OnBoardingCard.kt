@@ -56,11 +56,15 @@ fun OnBoardingCardHost(pagerState: PagerState, content: @Composable () -> Unit) 
             MaterialTheme.colorScheme.surfaceDim
         }
 
+
+    val ticketShape = remember { TicketShape() }
+
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             modifier = Modifier
                 .width(340.dp)
                 .height(340.dp)
+                .clip(ticketShape)
                 .drawWithCache {
                     val cornerRadius = 16.dp.toPx()
                     val cutoutRadius = 25.dp.toPx()

@@ -26,5 +26,5 @@ val cards = listOf<CardData>(
         description = "Place the phone on a flat surface.\nEnjoy your new mouse.",
         buttonText = "Start",
         progress = 1.0f,
-    )
+    ),
 )
