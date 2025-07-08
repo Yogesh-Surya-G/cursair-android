@@ -1,4 +1,4 @@
-package com.yelp.cursair.presentation.onboarding.components
+package com.yelp.cursair.presentation.common
 
 
 import androidx.compose.animation.core.InfiniteTransition

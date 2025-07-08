@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.yelp.cursair.presentation.CursairApp
+import com.yelp.cursair.presentation.main.MainScreen
 import com.yelp.cursair.presentation.onboarding.OnBoardingScreen
 import com.yelp.cursair.ui.theme.CursairTheme
 

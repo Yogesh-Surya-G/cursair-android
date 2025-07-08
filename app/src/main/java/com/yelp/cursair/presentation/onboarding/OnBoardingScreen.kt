@@ -33,7 +33,7 @@ import androidx.core.content.ContextCompat
 import com.yelp.cursair.domain.ConnectionManager
 import com.yelp.cursair.presentation.common.CursairLogo
 import com.yelp.cursair.presentation.common.QRCodeScannerView
-import com.yelp.cursair.presentation.onboarding.components.HorizontalDottedLoader
+import com.yelp.cursair.presentation.common.HorizontalDottedLoader
 import com.yelp.cursair.presentation.onboarding.components.OnBoardingCardHost
 import com.yelp.cursair.presentation.onboarding.components.OnBoardingPageContent
 import com.yelp.cursair.ui.theme.CursairTheme
@@ -83,7 +83,7 @@ fun OnBoardingScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                CursairLogo()
+                CursairLogo(modifier = Modifier)
                 Spacer(modifier = Modifier.height(48.dp))
                 OnBoardingCardHost(pagerState = pagerState) {
                     HorizontalPager(

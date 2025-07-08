@@ -14,8 +14,9 @@ import androidx.compose.ui.unit.dp
 import com.yelp.cursair.R
 
 @Composable
-fun CursairLogo() {
+fun CursairLogo(modifier: Modifier = Modifier) {
     Row(
+        modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {

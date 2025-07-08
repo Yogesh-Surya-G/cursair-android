@@ -7,12 +7,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.yelp.cursair.presentation.main.MainScreen
+import com.yelp.cursair.presentation.mouse.MouseScreen
 import com.yelp.cursair.presentation.onboarding.OnBoardingScreen
 
 // Define simple screen states for navigation
 enum class Screen {
     Onboarding,
-    Main
+    Mouse,
+    Main,
+
 }
 
 /**
@@ -31,15 +34,23 @@ fun CursairApp() {
                 OnBoardingScreen(
                     onOnboardingFinished = {
                         // When onboarding is done, switch to the main screen
-                        currentScreen = Screen.Main
+                        currentScreen = Screen.Mouse
                     }
                 )
             }
-            Screen.Main -> {
-                MainScreen(
+            Screen.Mouse -> {
+                MouseScreen(
                     onDisconnect = {
                         // When user disconnects, go back to the onboarding screen
                         currentScreen = Screen.Onboarding
+                    }
+                )
+            }
+            Screen.Main ->{
+                MainScreen(
+                    onConnectionEstablished = {
+                        // When user connects, switch to the main screen
+                        currentScreen = Screen.Mouse
                     }
                 )
             }
