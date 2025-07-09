@@ -72,4 +72,8 @@ dependencies {
 
 // ML Kit for Barcode (QR Code) Scanning
     implementation(libs.barcode.scanning)
+
+    implementation(libs.androidx.navigation.compose)
+
+    implementation(libs.androidx.datastore.preferences)
 }

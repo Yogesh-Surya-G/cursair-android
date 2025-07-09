@@ -12,14 +12,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.yelp.cursair.domain.ConnectionManager
+import com.yelp.cursair.domain.RotationSensorStreamer
 import com.yelp.cursair.ui.theme.CursairTheme
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.getValue
 
 /**
  * The main screen of the app after a successful connection.
@@ -31,6 +37,24 @@ fun MouseScreen(
     onDisconnect: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
+
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    // ERROR: This will cause a recomposition loop if ConnectionManager.isConnected is not properly handled.
+    val isConnected by ConnectionManager.isConnected.collectAsState()
+
+    val rotationStreamer = remember { RotationSensorStreamer(context,coroutineScope) }
+
+
+    LaunchedEffect(isConnected) {
+        if (isConnected) {
+            rotationStreamer.startStreaming()
+        } else {
+            rotationStreamer.stopStreaming()
+        }
+    }
+
 
     CursairTheme {
         Scaffold { paddingValues ->
@@ -70,7 +94,7 @@ fun MouseScreen(
                     onClick = {
                         scope.launch {
                             ConnectionManager.disconnect()
-                            // Navigate back after disconnecting
+                            rotationStreamer.stopStreaming()
                             onDisconnect()
                         }
                     },

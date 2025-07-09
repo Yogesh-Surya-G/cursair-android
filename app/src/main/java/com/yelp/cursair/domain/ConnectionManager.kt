@@ -5,7 +5,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -23,6 +25,9 @@ object ConnectionManager {
     private const val TAG = "ConnectionManager"
     private const val CONNECTION_TIMEOUT_MS = 5000
     private const val BUFFER_SIZE = 1024
+
+    private val _isConnected = MutableStateFlow(false)
+    val isConnected = _isConnected.asStateFlow()
 
     private var socket: DatagramSocket? = null
     private var hostAddress: InetAddress? = null
@@ -71,6 +76,7 @@ object ConnectionManager {
                     Log.i(TAG, "Connection successful")
 
                     startListening()
+                    _isConnected.value = true
                     return@withContext true
                 } else {
                     Log.w(TAG, "Connection failed")
@@ -78,6 +84,7 @@ object ConnectionManager {
                     return@withContext false
                 }
             } catch (e: JSONException) {
+                _isConnected.value = false
                 Log.e(TAG, "Connection failed : Invalid QR Code", e)
                 return@withContext false
             } catch (e: SocketTimeoutException) {
@@ -145,20 +152,10 @@ object ConnectionManager {
         socket?.close()
         socket = null
 
+        _isConnected.value = false
+
         hostAddress = null
         hostPort = -1
         Log.i(TAG, "Successfully Disconnected")
     }
-
-
-//    suspend fun connect(qrData: String): Boolean {
-//        // Simulate network latency
-//        delay(2500) // 2.5 seconds
-//
-//        // In a real app, you would parse qrData and attempt the connection.
-//        // Here, we'll just randomly return true or false to test both UI paths.
-//        // For stable testing, you can just return true or false.
-//        // e.g., return qrData.contains("valid-cursair-token")
-//        return Random.nextBoolean()
-//    }
 }

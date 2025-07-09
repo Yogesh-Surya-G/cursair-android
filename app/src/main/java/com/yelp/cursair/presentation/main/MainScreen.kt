@@ -41,6 +41,11 @@ fun MainScreen(
     val pagerState = rememberPagerState(pageCount = { 2 })
     val scope = rememberCoroutineScope()
 
+    LaunchedEffect(key1 = Unit) {
+        // Instantly move to the first page without animation.
+        pagerState.scrollToPage(0)
+    }
+
     // States for the UI flow within Page 0
     var showScanner by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }

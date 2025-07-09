@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.yelp.cursair.navigation.Navigation
 import com.yelp.cursair.presentation.CursairApp
 import com.yelp.cursair.presentation.main.MainScreen
 import com.yelp.cursair.presentation.onboarding.OnBoardingScreen
@@ -19,7 +20,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             CursairTheme {
-                CursairApp()
+                Navigation()
             }
         }
     }
