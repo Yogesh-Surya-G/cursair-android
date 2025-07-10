@@ -22,10 +22,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.yelp.cursair.domain.ConnectionManager
-import com.yelp.cursair.domain.RotationSensorStreamer
 import com.yelp.cursair.ui.theme.CursairTheme
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
+import com.yelp.cursair.domain.AdvancedGyroscopeMouseStreamer
 
 /**
  * The main screen of the app after a successful connection.
@@ -44,7 +44,7 @@ fun MouseScreen(
     // ERROR: This will cause a recomposition loop if ConnectionManager.isConnected is not properly handled.
     val isConnected by ConnectionManager.isConnected.collectAsState()
 
-    val rotationStreamer = remember { RotationSensorStreamer(context,coroutineScope) }
+    val rotationStreamer = remember { AdvancedGyroscopeMouseStreamer(context,coroutineScope) }
 
 
     LaunchedEffect(isConnected) {
