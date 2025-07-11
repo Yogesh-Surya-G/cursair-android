@@ -20,7 +20,7 @@ import kotlin.math.sign
 /**
  * A data class to hold the calculated 2D movement.
  */
-data class Movement(val dx: Int, val dy: Int)
+//data class Movement(val dx: Int, val dy: Int)
 
 /**
  * An advanced sensor manager that streams cursor movement data using the phone's gyroscope.
