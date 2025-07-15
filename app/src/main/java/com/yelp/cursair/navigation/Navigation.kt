@@ -78,7 +78,7 @@ fun Navigation(){
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = MaterialTheme.colorScheme.background), // Your splash background color
+                .background(color = MaterialTheme.colorScheme.background),
             contentAlignment = Alignment.Center
         ) {
             Icon(

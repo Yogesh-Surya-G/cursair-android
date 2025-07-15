@@ -19,7 +19,7 @@ import kotlin.math.sign
 /**
  * A data class to hold the calculated 2D movement.
  */
-data class Movement(val dx: Int, val dy: Int)
+//data class Movement(val dx: Int, val dy: Int)
 
 /**
  * The definitive hybrid sensor manager, engineered to provide the most intuitive and stable
