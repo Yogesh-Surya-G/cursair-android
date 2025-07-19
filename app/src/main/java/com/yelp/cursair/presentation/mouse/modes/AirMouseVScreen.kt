@@ -23,8 +23,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -36,12 +38,12 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yelp.cursair.domain.ConnectionManager
-import com.yelp.cursair.domain.Sensor.AirMouseStreamer
 import com.yelp.cursair.domain.Sensor.AirMouseStreamerV
 import com.yelp.cursair.presentation.mouse.components.MouseButton
 import com.yelp.cursair.ui.theme.CursairTheme
 import kotlinx.coroutines.launch
 import kotlin.math.abs
+
 
 @Composable
 fun AirMouseVScreen() {
@@ -49,6 +51,10 @@ fun AirMouseVScreen() {
     val context = LocalContext.current
 
     val isConnected by ConnectionManager.isConnected.collectAsState()
+    var isLeftPressed by remember { mutableStateOf(false) }
+    var isRightPressed by remember { mutableStateOf(false) }
+
+
 
     val isInPreview = LocalInspectionMode.current
     val rotationStreamer = remember {
@@ -118,12 +124,27 @@ fun AirMouseVScreen() {
             // Left Button
             MouseButton(
                 text = "Left",
-                modifier = Modifier.width(120.dp)
-            ) {
-                scope.launch {
-                    ConnectionManager.sendMessage("{\"event\":\"lmb\"}")
+                modifier = Modifier.width(120.dp),
+                isPressed = isLeftPressed,
+                onSingleClick = {
+                    scope.launch {
+                        ConnectionManager.sendMessage("{\"event\":\"lmb\"}")
+                    }
+                },
+                onPressDown = {
+                    isLeftPressed = true
+                    scope.launch {
+                        ConnectionManager.sendMessage("{\"event\":\"lmb_down\"}")
+                    }
+                },
+                onPressUp = {
+                    isLeftPressed = false
+                    scope.launch {
+                        ConnectionManager.sendMessage("{\"event\":\"lmb_up\"}")
+                    }
                 }
-            }
+            )
+
 
             Surface(
                 modifier = Modifier
@@ -177,16 +198,30 @@ fun AirMouseVScreen() {
             }
 
 
-
-            // Right Button
+            //Right Mouse Button
             MouseButton(
                 text = "Right",
-                modifier = Modifier.width(120.dp)
-            ) {
-                scope.launch {
-                    ConnectionManager.sendMessage("{\"event\":\"rmb\"}")
+                modifier = Modifier.width(120.dp),
+                isPressed = isRightPressed,
+                onSingleClick = {
+                    scope.launch {
+                        ConnectionManager.sendMessage("{\"event\":\"rmb\"}")
+                    }
+                },
+                onPressDown = {
+                    isRightPressed = true
+                    scope.launch {
+                        ConnectionManager.sendMessage("{\"event\":\"rmb_down\"}")
+                    }
+                },
+                onPressUp = {
+                    isRightPressed = false
+                    scope.launch {
+                        ConnectionManager.sendMessage("{\"event\":\"rmb_up\"}")
+                    }
                 }
-            }
+            )
+
         }
 
         Spacer(modifier = Modifier.height(24.dp))
