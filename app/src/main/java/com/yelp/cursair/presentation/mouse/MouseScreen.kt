@@ -1,5 +1,8 @@
 package com.yelp.cursair.presentation.mouse
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -17,156 +22,147 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.yelp.cursair.domain.Sensor.AirMouseStreamer
+import androidx.compose.ui.unit.sp
 import com.yelp.cursair.domain.ConnectionManager
+import com.yelp.cursair.presentation.mouse.modes.AirMouseVScreen
 import com.yelp.cursair.ui.theme.CursairTheme
 import kotlinx.coroutines.launch
 
-/**
- * The main screen of the app after a successful connection.
- * @param onDisconnect Callback invoked when the user chooses to disconnect. This should
- * navigate the user back to the onboarding/connection screen.
- */
 @Composable
 fun MouseScreen(
     onDisconnect: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
-
     val isConnected by ConnectionManager.isConnected.collectAsState()
 
 
-    val isInPreview = LocalInspectionMode.current
-    val rotationStreamer = remember {
-        if (isInPreview) {
-            null
-        } else {
-            AirMouseStreamer(context, scope)
+    BackHandler {
+        scope.launch {
+            if (ConnectionManager.isConnected.value) {
+                ConnectionManager.disconnect()
+            }
+            onDisconnect()
         }
     }
 
-
-
-    LaunchedEffect(isConnected) {
-        if (isConnected) {
-            rotationStreamer?.startStreaming()
-        } else {
-            rotationStreamer?.stopStreaming()
+    DisposableEffect(Unit) {
+        onDispose {
+            // This runs when the composable is disposed (screen is exited)
+            scope.launch {
+                if (ConnectionManager.isConnected.value) {
+                    ConnectionManager.disconnect()
+                }
+                onDisconnect()
+            }
         }
     }
+
+    // Pager state for 3 pages
+    val pagerState = rememberPagerState(pageCount = { 2 })
+    val tabTitles = listOf("AirMouse", "Touchpad")
 
     CursairTheme {
         Scaffold { paddingValues ->
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                // Header: Title and Icon
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Top,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text(
-                            text = "Cursair",
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Text(
-                            text = "Connected",
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                        )
-                    }
-                }
 
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Mouse Click Buttons
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    MouseButton(text = "Left", modifier = Modifier.weight(1f)){
-                        scope.launch {
-                            ConnectionManager.sendMessage("{\"event\":\"lmb\"}")
+                // Main content area - shows current selected screen
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxSize(),
+                    userScrollEnabled = false,
+                ) { page ->
+                    when (page) {
+                        0 -> {
+                            AirMouseVScreen()
                         }
-                    }
-                    MouseButton(text = "Right", modifier = Modifier.weight(1f)){
-                        scope.launch {
-                            ConnectionManager.sendMessage("{\"event\":\"rmb\"}")
+                        1 -> {
+                            TouchpadScreen()
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Trackpad Area
-                Surface(
+                // Bottom navigation column with custom tab selection
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
+                        .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .weight(1f),
-                    shape = RoundedCornerShape(24.dp),
-                    color = MaterialTheme.colorScheme.surface,
+                        .background(
+                            color = MaterialTheme.colorScheme.surface,
+                            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+                        )
+                        .padding(16.dp)
                 ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
+
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Custom pill-style tab selection
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(25.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(4.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            tabTitles.forEachIndexed { index, title ->
+                                PillTab(
+                                    text = title,
+                                    selected = pagerState.currentPage == index,
+                                    onClick = {
+                                        scope.launch {
+                                            pagerState.animateScrollToPage(index)
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Disconnect button
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                ConnectionManager.disconnect()
+                                onDisconnect()
+                            }
+                        },
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp)
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.onSurface,
+                            contentColor = MaterialTheme.colorScheme.surface
+                        )
                     ) {
                         Text(
-                            text = "Move your phone to control the cursor",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            textAlign = TextAlign.Center
+                            text = "Disconnect",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Disconnect Button
-                Button(
-                    onClick = {
-                        scope.launch {
-                            ConnectionManager.sendMessage("{\"event\":\"disconnect\"}")
-                            ConnectionManager.disconnect()
-                            rotationStreamer?.stopStreaming()
-                            onDisconnect()
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.onSurface,
-                        contentColor = MaterialTheme.colorScheme.surface
-                    )
-                ) {
-                    Text(
-                        text = "Disconnect",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
                 }
             }
         }
@@ -174,20 +170,57 @@ fun MouseScreen(
 }
 
 @Composable
-private fun MouseButton(text: String, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.height(56.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface
-        ),
+private fun PillTab(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor = if (selected) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        Color.Transparent
+    }
+
+    val textColor = if (selected) {
+        MaterialTheme.colorScheme.onPrimary
+    } else {
+        MaterialTheme.colorScheme.onSurface
+    }
+
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(backgroundColor)
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Text(text = text, style = MaterialTheme.typography.labelLarge, softWrap = false)
+        Text(
+            text = text,
+            color = textColor,
+            fontSize = 14.sp,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
+// Placeholder Touchpad screen
+@Composable
+private fun TouchpadScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "(Coming Soon)",
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            textAlign = TextAlign.Center
+        )
+    }
+}
 
 @PreviewLightDark
 @Composable
@@ -196,279 +229,3 @@ private fun MouseScreenPreview() {
         MouseScreen(onDisconnect = {})
     }
 }
-//package com.yelp.cursair.presentation.mouse
-//
-//import androidx.compose.foundation.Canvas
-//import androidx.compose.foundation.background
-//import androidx.compose.foundation.layout.Arrangement
-//import androidx.compose.foundation.layout.Box
-//import androidx.compose.foundation.layout.Column
-//import androidx.compose.foundation.layout.Row
-//import androidx.compose.foundation.layout.Spacer
-//import androidx.compose.foundation.layout.fillMaxSize
-//import androidx.compose.foundation.layout.fillMaxWidth
-//import androidx.compose.foundation.layout.height
-//import androidx.compose.foundation.layout.padding
-//import androidx.compose.foundation.layout.size
-//import androidx.compose.foundation.layout.width
-//import androidx.compose.foundation.shape.CircleShape
-//import androidx.compose.foundation.shape.RoundedCornerShape
-//import androidx.compose.material.icons.Icons
-//import androidx.compose.material.icons.filled.KeyboardArrowUp
-//import androidx.compose.material3.Button
-//import androidx.compose.material3.ButtonDefaults
-//import androidx.compose.material3.Icon
-//import androidx.compose.material3.MaterialTheme
-//import androidx.compose.material3.OutlinedButton
-//import androidx.compose.material3.Scaffold
-//import androidx.compose.material3.Surface
-//import androidx.compose.material3.Text
-//import androidx.compose.runtime.Composable
-//import androidx.compose.runtime.LaunchedEffect
-//import androidx.compose.runtime.collectAsState
-//import androidx.compose.runtime.getValue
-//import androidx.compose.runtime.remember
-//import androidx.compose.runtime.rememberCoroutineScope
-//import androidx.compose.ui.Alignment
-//import androidx.compose.ui.Modifier
-//import androidx.compose.ui.geometry.Offset
-//import androidx.compose.ui.graphics.Color
-//import androidx.compose.ui.platform.LocalContext
-//import androidx.compose.ui.platform.LocalInspectionMode
-//import androidx.compose.ui.text.font.FontWeight
-//import androidx.compose.ui.text.style.TextAlign
-//import androidx.compose.ui.tooling.preview.PreviewLightDark
-//import androidx.compose.ui.unit.dp
-//import androidx.compose.ui.unit.sp
-//import com.yelp.cursair.domain.Sensor.AirMouseStreamer
-//import com.yelp.cursair.domain.ConnectionManager
-//import com.yelp.cursair.domain.Sensor.PhysicsModelSensorManager
-//import com.yelp.cursair.ui.theme.CursairTheme
-//import kotlinx.coroutines.launch
-//
-///**
-// * The main screen of the app after a successful connection.
-// * @param onDisconnect Callback invoked when the user chooses to disconnect. This should
-// * navigate the user back to the onboarding/connection screen.
-// */
-//@Composable
-//fun MouseScreen(
-//    onDisconnect: () -> Unit
-//) {
-//    val scope = rememberCoroutineScope()
-//    val context = LocalContext.current
-//
-//    val isConnected by ConnectionManager.isConnected.collectAsState()
-//
-//    val isInPreview = LocalInspectionMode.current
-//    val rotationStreamer = remember {
-//        if (isInPreview) {
-//            null
-//        } else {
-//            PhysicsModelSensorManager(context, scope)
-//        }
-//    }
-//
-//    LaunchedEffect(isConnected) {
-//        if (isConnected) {
-//            rotationStreamer?.startStreaming()
-//        } else {
-//            rotationStreamer?.stopStreaming()
-//        }
-//    }
-//
-//    CursairTheme {
-//        Scaffold { paddingValues ->
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxSize()
-//                    .padding(paddingValues),
-//                horizontalAlignment = Alignment.CenterHorizontally,
-//            ) {
-//                Spacer(modifier = Modifier.height(32.dp))
-//
-//                // Mouse Click Buttons with Scroll in center
-//                Row(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    horizontalArrangement = Arrangement.SpaceEvenly,
-//                    verticalAlignment = Alignment.CenterVertically
-//                ) {
-//                    // Left Button
-//                    MouseButton(
-//                        text = "Left",
-//                        modifier = Modifier.width(120.dp)
-//                    ) {
-//                        scope.launch {
-//                            ConnectionManager.sendMessage("{\"event\":\"lmb\"}")
-//                        }
-//                    }
-//
-//                    // Scroll Button in center
-//                    Column(
-//                        horizontalAlignment = Alignment.CenterHorizontally,
-//                        modifier = Modifier.padding(horizontal = 16.dp)
-//                    ) {
-//                        Surface(
-//                            modifier = Modifier.size(40.dp),
-//                            shape = CircleShape,
-//                            color = Color.Transparent,
-//                        ) {
-//                            Box(
-//                                contentAlignment = Alignment.Center,
-//                                modifier = Modifier.fillMaxSize()
-//                            ) {
-//                                Column(
-//                                    horizontalAlignment = Alignment.CenterHorizontally
-//                                ) {
-//                                    Text(
-//                                        text = "^",
-//                                        fontSize = 12.sp,
-//                                        color = MaterialTheme.colorScheme.onSurface
-//                                    )
-//                                    Text(
-//                                        text = "v",
-//                                        fontSize = 12.sp,
-//                                        color = MaterialTheme.colorScheme.onSurface
-//                                    )
-//                                }
-//                            }
-//                        }
-//                        Spacer(modifier = Modifier.height(8.dp))
-//                        Text(
-//                            text = "Scroll",
-//                            style = MaterialTheme.typography.bodyMedium,
-//                            color = MaterialTheme.colorScheme.onBackground
-//                        )
-//                    }
-//
-//                    // Right Button
-//                    MouseButton(
-//                        text = "Right",
-//                        modifier = Modifier.width(120.dp)
-//                    ) {
-//                        scope.launch {
-//                            ConnectionManager.sendMessage("{\"event\":\"rmb\"}")
-//                        }
-//                    }
-//                }
-//
-//                Spacer(modifier = Modifier.height(32.dp))
-//
-//                // Trackpad area with grid pattern
-//                Surface(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .weight(1f),
-//                    shape = RoundedCornerShape(24.dp),
-//                    color = Color.Transparent
-//                ) {
-//                    Box(
-//                        modifier = Modifier.fillMaxSize()
-//                    ) {
-//                        // Grid pattern
-//                        Canvas(modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp)) {
-//                            val gridSpacing = 30.dp.toPx()
-//                            val dotRadius = 2.dp.toPx()
-//                            val dotColor = Color.Gray.copy(alpha = 0.4f)
-//
-//                            val width = size.width
-//                            val height = size.height
-//
-//                            // Draw grid dots
-//                            var x = gridSpacing
-//                            while (x < width) {
-//                                var y = gridSpacing
-//                                while (y < height) {
-//                                    drawCircle(
-//                                        color = dotColor,
-//                                        radius = dotRadius,
-//                                        center = Offset(x, y)
-//                                    )
-//                                    y += gridSpacing
-//                                }
-//                                x += gridSpacing
-//                            }
-//                        }
-//                    }
-//                }
-//
-//                Spacer(modifier = Modifier.height(24.dp))
-//
-//                // Bottom section with arrow and mode info
-//                Column(
-//                    horizontalAlignment = Alignment.CenterHorizontally,
-//                    verticalArrangement = Arrangement.Bottom,
-//                    modifier = Modifier
-//                               .fillMaxWidth()
-//                               .background(color = MaterialTheme.colorScheme.surface,shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-//                ) {
-//
-//                    Icon(
-//                        imageVector = Icons.Default.KeyboardArrowUp,
-//                        contentDescription = "Swipe up",
-//                        tint = MaterialTheme.colorScheme.onBackground,
-//                        modifier = Modifier.size(32.dp)
-//                    )
-//
-//                    Spacer(modifier = Modifier.height(8.dp))
-//
-//                    Text(
-//                        text = "Flat Mouse",
-//                        style = MaterialTheme.typography.headlineSmall,
-//                        fontWeight = FontWeight.Bold,
-//                        color = MaterialTheme.colorScheme.onBackground,
-//                    )
-//
-//                    Button(
-//                        onClick = {
-//                            scope.launch {
-//                                ConnectionManager.sendMessage("{\"event\":\"disconnect\"}")
-//                                ConnectionManager.disconnect()
-//                                rotationStreamer?.stopStreaming()
-//                                onDisconnect()
-//                            }
-//                        },
-//                        colors = ButtonDefaults.buttonColors(
-//                            containerColor = Color.Transparent,
-//                            contentColor = MaterialTheme.colorScheme.onBackground
-//                        )
-//                    ) {
-//                        Text(
-//                            text = "Swipe up to switch modes or disconnect",
-//                            style = MaterialTheme.typography.bodyMedium,
-//                            textAlign = TextAlign.Center
-//                        )
-//                    }
-//                }
-//
-//            }
-//        }
-//    }
-//}
-//
-//@Composable
-//private fun MouseButton(text: String, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
-//    OutlinedButton(
-//        onClick = onClick,
-//        modifier = modifier.height(200.dp),
-//        shape = RoundedCornerShape(16.dp),
-//        colors = ButtonDefaults.buttonColors(
-//            containerColor = Color.Transparent,
-//            contentColor = MaterialTheme.colorScheme.onSurface,
-//        ),
-//    ) {
-//        Text(
-//            text = text,
-//            style = MaterialTheme.typography.titleMedium,
-//            fontWeight = FontWeight.Medium
-//        )
-//    }
-//}
-//
-//@PreviewLightDark
-//@Composable
-//private fun MouseScreenPreview() {
-//    CursairTheme {
-//        MouseScreen(onDisconnect = {})
-//    }
-//}

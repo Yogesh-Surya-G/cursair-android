@@ -1,5 +1,6 @@
 package com.yelp.cursair.presentation.mouse.modes
 
+import androidx.compose.animation.core.copy
 import com.yelp.cursair.domain.Sensor.AirMouseStreamer
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +31,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -75,74 +77,74 @@ fun AirMouseScreen(
                     .padding(paddingValues),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Mouse Click Buttons with Scroll in center
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Left Button
-                    MouseButton(
-                        text = "Left",
-                        modifier = Modifier.width(120.dp)
-                    ) {
-                        scope.launch {
-                            ConnectionManager.sendMessage("{\"event\":\"lmb\"}")
-                        }
-                    }
-
-                    // Scroll Button in center
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    ) {
-                        Surface(
-                            modifier = Modifier.size(40.dp),
-                            shape = CircleShape,
-                            color = Color.Transparent,
-                        ) {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = "^",
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        text = "v",
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Scroll",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-
-                    // Right Button
-                    MouseButton(
-                        text = "Right",
-                        modifier = Modifier.width(120.dp)
-                    ) {
-                        scope.launch {
-                            ConnectionManager.sendMessage("{\"event\":\"rmb\"}")
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
+//                Spacer(modifier = Modifier.height(32.dp))
+//
+//                // Mouse Click Buttons with Scroll in center
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.SpaceEvenly,
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    // Left Button
+//                    MouseButton(
+//                        text = "Left",
+//                        modifier = Modifier.width(120.dp)
+//                    ) {
+//                        scope.launch {
+//                            ConnectionManager.sendMessage("{\"event\":\"lmb\"}")
+//                        }
+//                    }
+//
+//                    // Scroll Button in center
+//                    Column(
+//                        horizontalAlignment = Alignment.CenterHorizontally,
+//                        modifier = Modifier.padding(horizontal = 16.dp)
+//                    ) {
+//                        Surface(
+//                            modifier = Modifier.size(40.dp),
+//                            shape = CircleShape,
+//                            color = Color.Transparent,
+//                        ) {
+//                            Box(
+//                                contentAlignment = Alignment.Center,
+//                                modifier = Modifier.fillMaxSize()
+//                            ) {
+//                                Column(
+//                                    horizontalAlignment = Alignment.CenterHorizontally
+//                                ) {
+//                                    Text(
+//                                        text = "^",
+//                                        fontSize = 12.sp,
+//                                        color = MaterialTheme.colorScheme.onSurface
+//                                    )
+//                                    Text(
+//                                        text = "v",
+//                                        fontSize = 12.sp,
+//                                        color = MaterialTheme.colorScheme.onSurface
+//                                    )
+//                                }
+//                            }
+//                        }
+//                        Spacer(modifier = Modifier.height(8.dp))
+//                        Text(
+//                            text = "Scroll",
+//                            style = MaterialTheme.typography.bodyMedium,
+//                            color = MaterialTheme.colorScheme.onBackground
+//                        )
+//                    }
+//
+//                    // Right Button
+//                    MouseButton(
+//                        text = "Right",
+//                        modifier = Modifier.width(120.dp)
+//                    ) {
+//                        scope.launch {
+//                            ConnectionManager.sendMessage("{\"event\":\"rmb\"}")
+//                        }
+//                    }
+//                }
+//
+//                Spacer(modifier = Modifier.height(32.dp))
 
                 // Trackpad area with grid pattern
                 Surface(
@@ -156,7 +158,13 @@ fun AirMouseScreen(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         // Grid pattern
-                        Canvas(modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp)) {
+                        Canvas(modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 8.dp)) {
+
+
+
+
                             val gridSpacing = 30.dp.toPx()
                             val dotRadius = 2.dp.toPx()
                             val dotColor = Color.Gray.copy(alpha = 0.4f)

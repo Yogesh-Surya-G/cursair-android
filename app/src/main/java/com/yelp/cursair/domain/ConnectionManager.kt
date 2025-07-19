@@ -145,6 +145,9 @@ object ConnectionManager {
 
 
     suspend fun disconnect() = withContext(Dispatchers.IO) {
+
+        sendMessage("{\"event\":\"disconnect\"}")
+
         Log.i(TAG,"Disconnecting...")
         listeningJob?.cancel()
         listeningJob = null

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -26,6 +27,11 @@ import com.yelp.cursair.presentation.mouse.MouseScreen
 import com.yelp.cursair.presentation.onboarding.OnBoardingScreen
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import com.yelp.cursair.domain.ConnectionManager
 
 @Composable
 fun Navigation(){
@@ -33,6 +39,47 @@ fun Navigation(){
     val context = LocalContext.current
     val repository = remember { UserPreferencesRepository(context) }
     val scope = rememberCoroutineScope()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+
+    // Handle app exit scenarios - disconnect when app is backgrounded or closed
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_STOP -> {
+                    // App is being backgrounded or closed
+                    scope.launch {
+                        if (ConnectionManager.isConnected.value) {
+                            ConnectionManager.disconnect()
+                        }
+                    }
+                }
+                Lifecycle.Event.ON_DESTROY -> {
+                    // App is being destroyed (backup cleanup)
+                    scope.launch {
+                        if (ConnectionManager.isConnected.value) {
+                            ConnectionManager.disconnect()
+                        }
+                    }
+                }
+                else -> {}
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            // Final cleanup when Navigation composable is disposed
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            scope.launch {
+                if (ConnectionManager.isConnected.value) {
+                    ConnectionManager.disconnect()
+                }
+            }
+        }
+    }
+
+
 
     val startDestination by produceState<String?>(initialValue = null) {
         value = if (repository.isOnboardingFinished.first()) {

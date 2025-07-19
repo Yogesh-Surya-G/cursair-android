@@ -1,0 +1,198 @@
+package com.yelp.cursair.presentation.mouse
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
+import com.yelp.cursair.domain.Sensor.AirMouseStreamer
+import com.yelp.cursair.domain.ConnectionManager
+import com.yelp.cursair.ui.theme.CursairTheme
+import kotlinx.coroutines.launch
+
+/**
+ * The main screen of the app after a successful connection.
+ * @param onDisconnect Callback invoked when the user chooses to disconnect. This should
+ * navigate the user back to the onboarding/connection screen.
+ */
+@Composable
+fun MouseScreenOld(
+    onDisconnect: () -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    val isConnected by ConnectionManager.isConnected.collectAsState()
+
+
+    val isInPreview = LocalInspectionMode.current
+    val rotationStreamer = remember {
+        if (isInPreview) {
+            null
+        } else {
+            AirMouseStreamer(context, scope)
+        }
+    }
+
+
+
+    LaunchedEffect(isConnected) {
+        if (isConnected) {
+            rotationStreamer?.startStreaming()
+        } else {
+            rotationStreamer?.stopStreaming()
+        }
+    }
+
+    CursairTheme {
+        Scaffold { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                // Header: Title and Icon
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text(
+                            text = "Cursair",
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Text(
+                            text = "Connected",
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = MaterialTheme.colorScheme.onBackground,
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Mouse Click Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    MouseButton(text = "Left", modifier = Modifier.weight(1f)){
+                        scope.launch {
+                            ConnectionManager.sendMessage("{\"event\":\"lmb\"}")
+                        }
+                    }
+                    MouseButton(text = "Right", modifier = Modifier.weight(1f)){
+                        scope.launch {
+                            ConnectionManager.sendMessage("{\"event\":\"rmb\"}")
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Trackpad Area
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    shape = RoundedCornerShape(24.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Move your phone to control the cursor",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Disconnect Button
+                Button(
+                    onClick = {
+                        scope.launch {
+                            ConnectionManager.sendMessage("{\"event\":\"disconnect\"}")
+                            ConnectionManager.disconnect()
+                            rotationStreamer?.stopStreaming()
+                            onDisconnect()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.onSurface,
+                        contentColor = MaterialTheme.colorScheme.surface
+                    )
+                ) {
+                    Text(
+                        text = "Disconnect",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MouseButton(text: String, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.height(56.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ),
+    ) {
+        Text(text = text, style = MaterialTheme.typography.labelLarge, softWrap = false)
+    }
+}
+
+
+@PreviewLightDark
+@Composable
+private fun MouseScreenPreview() {
+    CursairTheme {
+        MouseScreenOld(onDisconnect = {})
+    }
+}
